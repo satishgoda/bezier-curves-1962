@@ -1,0 +1,10 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Local preview servers / logs
+*.log
