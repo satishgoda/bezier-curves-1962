@@ -41,7 +41,8 @@ See [`docs/HISTORY.md`](docs/HISTORY.md) for the full story.
 ## Running it
 
 There is no build step and nothing to install — the whole application is one
-self-contained `index.html`.
+self-contained file. The original edition is `index.html` (French control
+desk); `index.en.html` is the same machine, fully in English.
 
 ```sh
 # Option 1: just open it
@@ -61,7 +62,8 @@ aesthetic anyway.
 
 ```
 .
-├── index.html          # the entire application (markup, styles, engine)
+├── index.html          # the entire application (markup, styles, engine) — French edition
+├── index.en.html       # the English edition of the same application
 ├── assets/
 │   └── icon.webp       # application icon
 └── docs/
