@@ -383,5 +383,372 @@
   </footer>
 </div>
 
+<script>
+(function(){
+  "use strict";
+  var plot = document.getElementById('plot');
+  var pctx = plot.getContext('2d');
+  var basis = document.getElementById('basis');
+  var bctx = basis.getContext('2d');
+  var slider = document.getElementById('tSlider');
+  var playBtn = document.getElementById('playBtn');
+  var SUB = ['₀','₁','₂','₃','₄','₅','₆'];
+  var COLORS = ['#17365d','#b91f24','#0f5a52','#d98a00','#6b4fa1','#333333'];
+  var COLORS_DARK = ['#8fb6e8','#ff5a4e','#5ed0bd','#ffb02e','#c4a6ff','#e8e2cf'];
+
+  function isDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function palette(){
+    var d = isDark();
+    return {
+      paper: d ? '#12211c' : '#f8f4e6',
+      gridMinor: d ? '#1e3a30' : '#d7dec9',
+      gridMajor: d ? '#2a5243' : '#b3c0a4',
+      axis: d ? '#3f7a63' : '#7d9271',
+      ink: d ? '#eaf2e4' : '#1c2b1e',
+      curve: d ? '#ff6b5e' : '#b91f24',
+      polygon: d ? '#9db8d8' : '#17365d',
+      handleFill: d ? '#12211c' : '#f8f4e6',
+      muted: d ? '#8aa393' : '#5c6b5e',
+      hull: d ? 'rgba(94,208,189,0.10)' : 'rgba(23,54,93,0.08)',
+      hullLine: d ? '#5ed0bd' : '#17365d',
+      colors: d ? COLORS_DARK : COLORS
+    };
+  }
+
+  // State — points stored normalised 0..1 (y up will be flipped on draw)
+  var presets = {
+    car:    [{x:.06,y:.30},{x:.28,y:.78},{x:.62,y:.82},{x:.94,y:.34}],
+    esse:   [{x:.07,y:.22},{x:.38,y:.92},{x:.62,y:.08},{x:.93,y:.78}],
+    arc:    [{x:.08,y:.18},{x:.30,y:.88},{x:.70,y:.88},{x:.92,y:.18}],
+    boucle: [{x:.10,y:.50},{x:.42,y:.95},{x:.95,y:.55},{x:.40,y:.08}]
+  };
+  var points = presets.car.map(function(p){return {x:p.x,y:p.y};});
+  var t = 0.5;
+  var playing = false;
+  var playDir = 1;
+  var showPoly = true, showCons = true, showGrid = true, showHull = false;
+  var dragIdx = -1;
+  var selectedIdx = -1;
+  var lastTime = 0;
+
+  function comb(n,k){ var r=1; for(var i=0;i<k;i++){ r=r*(n-i)/(i+1);} return r; }
+  function bernstein(n,i,tt){ return comb(n,i)*Math.pow(1-tt,n-i)*Math.pow(tt,i); }
+  function bezierPoint(pts, tt){
+    var n = pts.length-1, x=0, y=0;
+    for(var i=0;i<=n;i++){ var w = bernstein(n,i,tt); x+=w*pts[i].x; y+=w*pts[i].y; }
+    return {x:x,y:y};
+  }
+  function deCasteljau(pts, tt){
+    var levels = [pts.map(function(p){return {x:p.x,y:p.y};})];
+    var cur = levels[0];
+    while(cur.length>1){
+      var nxt=[];
+      for(var i=0;i<cur.length-1;i++){
+        nxt.push({ x: cur[i].x+(cur[i+1].x-cur[i].x)*tt, y: cur[i].y+(cur[i+1].y-cur[i].y)*tt });
+      }
+      levels.push(nxt); cur = nxt;
+    }
+    return levels;
+  }
+  function hull(pts){
+    var ps = pts.slice().sort(function(a,b){ return a.x-b.x || a.y-b.y; });
+    if(ps.length<=2) return ps;
+    function cross(o,a,b){ return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x); }
+    var lower=[], upper=[], i, p;
+    for(i=0;i<ps.length;i++){ p=ps[i]; while(lower.length>=2 && cross(lower[lower.length-2],lower[lower.length-1],p)<=0) lower.pop(); lower.push(p); }
+    for(i=ps.length-1;i>=0;i--){ p=ps[i]; while(upper.length>=2 && cross(upper[upper.length-2],upper[upper.length-1],p)<=0) upper.pop(); upper.push(p); }
+    lower.pop(); upper.pop(); return lower.concat(upper);
+  }
+
+  // --- canvas geometry ---
+  function geom(){
+    var w = plot.width, h = plot.height, pad = 56;
+    return { w:w, h:h, pad:pad, iw:w-pad*2, ih:h-pad*2 };
+  }
+  function toPx(p){ var g=geom(); return { x: g.pad + p.x*g.iw, y: g.pad + (1-p.y)*g.ih }; }
+  function fromPx(px,py){ var g=geom(); return { x:(px-g.pad)/g.iw, y: 1-((py-g.pad)/g.ih) }; }
+  function clamp01(v){ return Math.max(0.02, Math.min(0.98, v)); }
+
+  function fitCanvas(){
+    // Fixed internal resolution keeps labels crisp; CSS scales it.
+    // Nothing to resize dynamically — width/height attributes are set in markup.
+  }
+
+  function drawPlot(){
+    var P = palette(), g = geom();
+    pctx.clearRect(0,0,g.w,g.h);
+    pctx.fillStyle = P.paper; pctx.fillRect(0,0,g.w,g.h);
+    if(showGrid){
+      var step = g.iw/10, i, px, py;
+      pctx.lineWidth = 1;
+      for(i=0;i<=50;i++){
+        px = g.pad + (g.iw/50)*i; py = g.pad + (g.ih/50)*i;
+        pctx.strokeStyle = (i%5===0) ? P.gridMajor : P.gridMinor;
+        pctx.beginPath(); pctx.moveTo(px,g.pad); pctx.lineTo(px,g.pad+g.ih); pctx.stroke();
+        pctx.beginPath(); pctx.moveTo(g.pad,py); pctx.lineTo(g.pad+g.iw,py); pctx.stroke();
+      }
+      pctx.strokeStyle = P.axis; pctx.lineWidth=1.5;
+      pctx.strokeRect(g.pad,g.pad,g.iw,g.ih);
+      pctx.fillStyle = P.muted; pctx.font = '20px "Courier Prime", monospace'; pctx.textAlign='center';
+      for(i=0;i<=10;i++){
+        px = g.pad + step*i;
+        pctx.fillText(String(i), px, g.pad+g.ih+30);
+        pctx.fillText(String(10-i), g.pad-26, g.pad+step*i+7);
+      }
+      pctx.textAlign='left'; pctx.fillText('X →', g.pad+g.iw-44, g.pad+g.ih+30);
+      pctx.save(); pctx.translate(18, g.pad+40); pctx.fillText('Y ↑',0,0); pctx.restore();
+    } else {
+      pctx.strokeStyle = P.axis; pctx.lineWidth=1.5; pctx.strokeRect(g.pad,g.pad,g.iw,g.ih);
+    }
+    if(showHull){
+      var h = hull(points);
+      if(h.length>2){
+        pctx.beginPath();
+        h.forEach(function(p,idx){ var q=toPx(p); if(idx===0) pctx.moveTo(q.x,q.y); else pctx.lineTo(q.x,q.y); });
+        pctx.closePath();
+        pctx.fillStyle = P.hull; pctx.fill();
+        pctx.setLineDash([7,6]); pctx.strokeStyle = P.hullLine; pctx.lineWidth=2; pctx.stroke(); pctx.setLineDash([]);
+      }
+    }
+    if(showPoly){
+      pctx.beginPath();
+      points.forEach(function(p,idx){ var q=toPx(p); if(idx===0) pctx.moveTo(q.x,q.y); else pctx.lineTo(q.x,q.y); });
+      pctx.setLineDash([10,7]); pctx.strokeStyle=P.polygon; pctx.lineWidth=2.5; pctx.stroke(); pctx.setLineDash([]);
+    }
+    // Construction
+    var levels = deCasteljau(points, t);
+    if(showCons){
+      for(var L=1; L<levels.length-1; L++){
+        var lvl = levels[L];
+        pctx.beginPath();
+        lvl.forEach(function(p,idx){ var q=toPx(p); if(idx===0) pctx.moveTo(q.x,q.y); else pctx.lineTo(q.x,q.y); });
+        pctx.strokeStyle = P.colors[L % P.colors.length]; pctx.globalAlpha = 0.55 + 0.15*L; pctx.lineWidth=2; pctx.stroke(); pctx.globalAlpha=1;
+        lvl.forEach(function(p){ var q=toPx(p); pctx.beginPath(); pctx.arc(q.x,q.y,5,0,Math.PI*2); pctx.fillStyle=P.colors[L % P.colors.length]; pctx.fill(); });
+      }
+      // segments from control pts to first level, for the current t segment lines on polygon
+      var lvl1 = levels[1];
+      if(lvl1){
+        lvl1.forEach(function(p){ var q=toPx(p); pctx.beginPath(); pctx.arc(q.x,q.y,6,0,Math.PI*2); pctx.fillStyle=P.colors[1]; pctx.fill(); pctx.strokeStyle=P.paper; pctx.lineWidth=2; pctx.stroke(); });
+      }
+    }
+    // Curve
+    pctx.beginPath();
+    for(var s=0;s<=120;s++){
+      var bp = bezierPoint(points, s/120); var q = toPx(bp);
+      if(s===0) pctx.moveTo(q.x,q.y); else pctx.lineTo(q.x,q.y);
+    }
+    pctx.strokeStyle = P.curve; pctx.lineWidth = 5; pctx.lineJoin='round'; pctx.lineCap='round'; pctx.stroke();
+    pctx.strokeStyle = P.paper; pctx.globalAlpha=.35; pctx.lineWidth=1.5; pctx.stroke(); pctx.globalAlpha=1;
+    // portion already travelled
+    pctx.beginPath();
+    var steps = Math.max(2, Math.floor(120*t));
+    for(var s2=0;s2<=steps;s2++){ var bp2 = bezierPoint(points, (s2/120)); var q2=toPx(bp2); if(s2===0) pctx.moveTo(q2.x,q2.y); else pctx.lineTo(q2.x,q2.y); }
+    // current point crosshair + marker
+    var cur = bezierPoint(points, t); var cq = toPx(cur);
+    pctx.strokeStyle = P.ink; pctx.lineWidth=1.5; pctx.setLineDash([4,4]);
+    pctx.beginPath(); pctx.moveTo(cq.x, g.pad); pctx.lineTo(cq.x, g.pad+g.ih); pctx.stroke();
+    pctx.beginPath(); pctx.moveTo(g.pad, cq.y); pctx.lineTo(g.pad+g.iw, cq.y); pctx.stroke(); pctx.setLineDash([]);
+    pctx.beginPath(); pctx.arc(cq.x,cq.y,11,0,Math.PI*2); pctx.fillStyle=P.curve; pctx.fill(); pctx.strokeStyle=P.paper; pctx.lineWidth=3; pctx.stroke();
+    pctx.beginPath(); pctx.arc(cq.x,cq.y,3.5,0,Math.PI*2); pctx.fillStyle=P.paper; pctx.fill();
+    pctx.fillStyle=P.ink; pctx.font='700 19px "Courier Prime", monospace'; pctx.textAlign='left';
+    pctx.fillText('B(t)', cq.x+16, cq.y-14);
+    // Handles
+    points.forEach(function(p, idx){
+      var q = toPx(p); var isEnd = (idx===0 || idx===points.length-1);
+      var isSel = (idx===selectedIdx || idx===dragIdx);
+      pctx.beginPath();
+      if(isEnd){ pctx.rect(q.x-11,q.y-11,22,22); } else { pctx.arc(q.x,q.y,11,0,Math.PI*2); }
+      pctx.fillStyle = isSel ? P.curve : P.handleFill; pctx.fill();
+      pctx.strokeStyle = P.ink; pctx.lineWidth = isSel ? 3.5 : 2.5; pctx.stroke();
+      pctx.beginPath(); pctx.arc(q.x,q.y,3,0,Math.PI*2); pctx.fillStyle = isSel ? '#fff' : P.ink; pctx.fill();
+      pctx.fillStyle = P.ink; pctx.font='700 21px "IBM Plex Mono", monospace';
+      var lx = q.x+16, ly = q.y-14;
+      if(q.x > g.w-110) lx = q.x-52; if(q.y < 70) ly = q.y+30;
+      pctx.fillText('P'+SUB[idx], lx, ly);
+    });
+  }
+
+  function drawBasis(){
+    var P = palette(); var w=basis.width, h=basis.height, padL=36, padB=30, padT=14, padR=12;
+    var iw=w-padL-padR, ih=h-padT-padB, n=points.length-1;
+    bctx.clearRect(0,0,w,h); bctx.fillStyle=P.paper; bctx.fillRect(0,0,w,h);
+    bctx.strokeStyle=P.gridMajor; bctx.lineWidth=1;
+    for(var gy=0; gy<=4; gy++){ var y=padT+ih-(ih/4)*gy; bctx.beginPath(); bctx.moveTo(padL,y); bctx.lineTo(padL+iw,y); bctx.stroke();
+      bctx.fillStyle=P.muted; bctx.font='16px "Courier Prime", monospace'; bctx.textAlign='right'; bctx.fillText((gy/4).toFixed(2).replace('0.','.'), padL-6, y+5); }
+    bctx.strokeStyle=P.axis; bctx.lineWidth=1.5; bctx.strokeRect(padL,padT,iw,ih);
+    for(var i=0;i<=n;i++){
+      bctx.beginPath();
+      for(var s=0;s<=100;s++){ var tt=s/100; var v=bernstein(n,i,tt); var x=padL+iw*tt, y=padT+ih-ih*v; if(s===0) bctx.moveTo(x,y); else bctx.lineTo(x,y); }
+      bctx.strokeStyle=P.colors[i%P.colors.length]; bctx.lineWidth=3; bctx.stroke();
+      var vt=bernstein(n,i,t); bctx.beginPath(); bctx.arc(padL+iw*t, padT+ih-ih*vt, 5,0,Math.PI*2); bctx.fillStyle=P.colors[i%P.colors.length]; bctx.fill();
+    }
+    var tx=padL+iw*t;
+    bctx.strokeStyle=P.curve; bctx.lineWidth=2; bctx.setLineDash([5,4]); bctx.beginPath(); bctx.moveTo(tx,padT); bctx.lineTo(tx,padT+ih); bctx.stroke(); bctx.setLineDash([]);
+    bctx.fillStyle=P.muted; bctx.font='16px "Courier Prime", monospace'; bctx.textAlign='center';
+    bctx.fillText('0', padL, padT+ih+22); bctx.fillText('t →', padL+iw/2, padT+ih+22); bctx.fillText('1', padL+iw, padT+ih+22);
+    bctx.fillStyle=P.curve; bctx.fillText('t', tx, padT-2 < 12 ? 12 : padT+ih+22);
+  }
+
+  // --- readouts / tables ---
+  var coordBody = document.getElementById('coordBody');
+  var weightRow = document.getElementById('weightRow');
+  var basisLegend = document.getElementById('basisLegend');
+  function renderTables(){
+    var n = points.length-1, html='';
+    points.forEach(function(p,i){
+      var role = i===0 ? 'Départ' : (i===points.length-1 ? 'Arrivée' : 'Aimant');
+      html += '<tr data-idx="'+i+'" class="'+(i===selectedIdx?'active':'')+'" style="cursor:pointer"><td><span class="pt-dot '+(i===0||i===points.length-1?'sq':'rd')+'"></span><strong>P'+SUB[i]+'</strong></td><td>'+(p.x*10).toFixed(2)+'</td><td>'+(p.y*10).toFixed(2)+'</td><td>'+role+'</td></tr>';
+    });
+    coordBody.innerHTML = html;
+    var rows = coordBody.querySelectorAll('tr');
+    rows.forEach(function(r){ r.addEventListener('click', function(){ selectedIdx = parseInt(r.getAttribute('data-idx'),10); renderAll(); }); });
+
+    var whtml='';
+    for(var i=0;i<=n;i++){
+      var wv = bernstein(n,i,t);
+      whtml += '<div class="wline"><span><strong>P'+SUB[i]+'</strong> · B<sub>'+i+','+n+'</sub></span><span class="wbar"><i style="width:'+(wv*100).toFixed(1)+'%"></i></span><span style="text-align:right;font-family:\'Courier Prime\',monospace">'+wv.toFixed(3)+'</span></div>';
+    }
+    var cur = bezierPoint(points,t);
+    whtml += '<p style="margin:10px 0 0;font-size:12.5px">→ &nbsp;<strong>B(t) = ('+(cur.x*10).toFixed(2)+' , '+(cur.y*10).toFixed(2)+')</strong> &nbsp;·&nbsp; somme des poids = 1.000</p>';
+    weightRow.innerHTML = whtml;
+
+    var lhtml='';
+    for(var j=0;j<=n;j++){ lhtml += '<span><span style="display:inline-block;width:18px;height:4px;vertical-align:middle;margin-right:5px;background:'+palette().colors[j%6]+'"></span>P'+SUB[j]+' — B<sub>'+j+','+n+'</sub>(t)</span>'; }
+    basisLegend.innerHTML = lhtml;
+
+    document.getElementById('degStatus').textContent = n + ' — ' + (n===2?'Quadratique':n===3?'Cubique':n===4?'Quartique':'Quintique');
+    document.getElementById('ptStatus').textContent = 'P₀ – P'+SUB[n];
+    document.getElementById('tStatus').textContent = 't = ' + t.toFixed(2);
+    document.getElementById('pctLabel').textContent = Math.round(t*100) + ' % du parcours';
+    var s = t.toFixed(2); // "0.50"
+    document.getElementById('odoInt').textContent = s.charAt(0);
+    document.getElementById('odoD1').textContent = s.charAt(2);
+    document.getElementById('odoD2').textContent = s.charAt(3);
+    document.querySelectorAll('.deg-btn').forEach(function(b){
+      b.classList.toggle('active', parseInt(b.getAttribute('data-deg'),10)===n);
+    });
+    document.getElementById('removeBtn').disabled = points.length<=3;
+    document.getElementById('addBtn').disabled = points.length>=6;
+  }
+
+  function renderAll(){ drawPlot(); drawBasis(); renderTables(); }
+
+  // --- interaction: dragging ---
+  function evtPos(e){
+    var r = plot.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    var cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    return { x: (cx-r.left)/r.width*plot.width, y: (cy-r.top)/r.height*plot.height };
+  }
+  function hitIndex(pos){
+    for(var i=points.length-1;i>=0;i--){ var q=toPx(points[i]); var dx=pos.x-q.x, dy=pos.y-q.y; if(dx*dx+dy*dy < 34*34) return i; }
+    return -1;
+  }
+  plot.addEventListener('pointerdown', function(e){
+    var pos = evtPos(e); var idx = hitIndex(pos);
+    if(idx>=0){ dragIdx = idx; selectedIdx = idx; plot.setPointerCapture && e.pointerId!==undefined && plot.setPointerCapture(e.pointerId); renderAll(); }
+  });
+  plot.addEventListener('pointermove', function(e){
+    if(dragIdx<0) return;
+    var pos = evtPos(e); var np = fromPx(pos.x,pos.y);
+    points[dragIdx] = { x: clamp01(np.x), y: clamp01(np.y) };
+    renderAll();
+  });
+  function endDrag(){ dragIdx=-1; }
+  plot.addEventListener('pointerup', endDrag);
+  plot.addEventListener('pointercancel', endDrag);
+
+  // --- controls ---
+  slider.addEventListener('input', function(){ t = parseInt(slider.value,10)/1000; stopPlay(); renderAll(); });
+  function stopPlay(){
+    if(!playing) return; playing=false;
+    playBtn.textContent='▶ Lecture';
+    document.getElementById('playStatus').textContent='Arrêt — prêt';
+    document.getElementById('lampPlay').className='lamp on-green';
+  }
+  function startPlay(){
+    if(playing){ stopPlay(); renderAll(); return; }
+    if(t>=0.999){ t=0; }
+    playing=true; playDir=1; lastTime=0;
+    playBtn.textContent='❚❚ Pause';
+    document.getElementById('playStatus').textContent='Lecture en cours…';
+    document.getElementById('lampPlay').className='lamp on-amber';
+    requestAnimationFrame(tick);
+  }
+  function tick(ts){
+    if(!playing) return;
+    if(!lastTime) lastTime=ts;
+    var dt=(ts-lastTime)/1000; lastTime=ts;
+    t += dt*0.28*playDir;
+    if(t>=1){ t=1; stopPlay(); slider.value=1000; renderAll(); return; }
+    if(t<=0){ t=0; playDir=1; }
+    slider.value = Math.round(t*1000);
+    renderAll();
+    requestAnimationFrame(tick);
+  }
+  playBtn.addEventListener('click', startPlay);
+  document.getElementById('tryBtn').addEventListener('click', function(){ t=0; slider.value=0; if(!playing) startPlay(); window.scrollTo({top:0,behavior:'smooth'}); });
+  document.getElementById('stepBtn').addEventListener('click', function(){ stopPlay(); t=Math.min(1, t+0.05); slider.value=Math.round(t*1000); renderAll(); });
+  document.getElementById('resetTBtn').addEventListener('click', function(){ stopPlay(); t=0; slider.value=0; renderAll(); });
+
+  function bindSwitch(id, fn){
+    var el=document.getElementById(id);
+    el.addEventListener('click', function(){
+      var v = el.getAttribute('aria-pressed')!=='true';
+      el.setAttribute('aria-pressed', v?'true':'false'); fn(v); renderAll();
+    });
+  }
+  bindSwitch('swPoly', function(v){ showPoly=v; });
+  bindSwitch('swCons', function(v){ showCons=v; });
+  bindSwitch('swGrid', function(v){ showGrid=v; });
+  bindSwitch('swHull', function(v){ showHull=v; });
+
+  function setDegree(n){
+    stopPlay();
+    while(points.length < n+1){
+      var a=points[points.length-2], b=points[points.length-1];
+      points.splice(points.length-1,0,{ x: clamp01((a.x+b.x)/2 + 0.06), y: clamp01((a.y+b.y)/2 + 0.10) });
+    }
+    while(points.length > n+1){ points.splice(points.length-2,1); }
+    selectedIdx=-1; renderAll();
+  }
+  document.querySelectorAll('.deg-btn').forEach(function(b){
+    b.addEventListener('click', function(){ setDegree(parseInt(b.getAttribute('data-deg'),10)); });
+  });
+  document.getElementById('addBtn').addEventListener('click', function(){ if(points.length<6) setDegree(points.length); });
+  document.getElementById('removeBtn').addEventListener('click', function(){ if(points.length>3) setDegree(points.length-2); });
+
+  document.querySelectorAll('[data-preset]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var name=b.getAttribute('data-preset');
+      document.querySelectorAll('[data-preset]').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active');
+      // Keep current degree: resample preset to current point count by keeping ends and spreading
+      var src = presets[name];
+      var target = points.length;
+      if(src.length===target){ points = src.map(function(p){return {x:p.x,y:p.y};}); }
+      else {
+        // build via evaluating the source curve at evenly spaced t for interior points
+        var np=[];
+        for(var i=0;i<target;i++){ np.push(bezierPoint(src, i/(target-1))); }
+        // use source ends exactly for first/last feel, interior from curve offset outward a touch
+        points = np.map(function(p,i){
+          if(i===0) return {x:src[0].x,y:src[0].y};
+          if(i===target-1) return {x:src[src.length-1].x,y:src[src.length-1].y};
+          return {x:clamp01(p.x), y:clamp01(p.y + (i%2? 0.10 : -0.04))};
+        });
+      }
+      selectedIdx=-1; renderAll();
+    });
+  });
+
+  if(window.matchMedia){
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if(mq.addEventListener) mq.addEventListener('change', renderAll);
+  }
+  fitCanvas();
+  renderAll();
+})();
+</script>
 </body>
 </html>
