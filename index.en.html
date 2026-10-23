@@ -202,5 +202,186 @@
 </style>
 </head>
 <body>
+<div class="cabinet">
+  <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+  <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
+
+  <header>
+    <div class="nameplate">
+      <div class="plate-left">
+        <div class="maker"><b>RENAULT NATIONAL WORKS</b><span class="dot">•</span><span>Engineering Department</span><span class="dot">•</span><span>Boulogne-Billancourt, Paris</span></div>
+        <h1>Bézier<br><em>Curves</em></h1>
+        <p class="subtitle">A working demonstration of the method published by <strong>Pierre Bézier in 1962</strong> — defining a smooth curve from a handful of control points, so a car body could be designed <strong>by numbers</strong>, milled by machine, and reproduced exactly.</p>
+        <div class="meta-row">
+          <span class="meta-chip red">Publication · 1962</span>
+          <span class="meta-chip">UNISURF System</span>
+          <span class="meta-chip blue">X–Y Plotter Table</span>
+          <span class="meta-chip">Apparatus No. 62-B</span>
+        </div>
+      </div>
+      <div class="plate-stamp" aria-hidden="true">
+        <div class="big">1962</div>
+        <div class="small">Technical note<br>Cleared for release</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="status-strip" role="status" aria-label="Machine status">
+    <div class="status-cell"><span class="lamp on-red" id="lampPower"></span> Power on</div>
+    <div class="status-cell"><span class="lamp on-green" id="lampPlay"></span> <span id="playStatus">Stopped — ready</span></div>
+    <div class="status-cell">Degree <strong id="degStatus">3 — Cubic</strong></div>
+    <div class="status-cell">Parameter <span class="val" id="tStatus">t = 0.50</span></div>
+    <div class="status-cell">Points <strong id="ptStatus">P₀ – P₃</strong></div>
+  </div>
+
+  <main>
+    <!-- MACHINE -->
+    <div class="machine">
+      <section aria-labelledby="plotLabel">
+        <p class="section-label" id="plotLabel"><span>§ 1 — Plotting table</span><span>Drag the points · the pen follows</span></p>
+        <div class="plotter-bezel">
+          <div class="plotter-head"><span><b>X–Y PLOTTER</b> &nbsp;·&nbsp; Millimetre graph paper</span><span>Scale 1:1</span></div>
+          <div class="screenwrap">
+            <canvas id="plot" width="880" height="660" aria-label="Interactive Bézier curve plot. Drag the control points to reshape the curve."></canvas>
+          </div>
+          <div class="plotter-foot">
+            <span class="preset-label">Programs:</span>
+            <button class="hbtn small" data-preset="car" type="button">Car body</button>
+            <button class="hbtn small" data-preset="esse" type="button">S-curve</button>
+            <button class="hbtn small" data-preset="arc" type="button">Arc</button>
+            <button class="hbtn small" data-preset="boucle" type="button">Loop</button>
+            <p class="foot-note">HOW TO USE — Grab a point P₀…Pₙ and drag it. The curve touches only P₀ and Pₙ; the inner points pull on it like magnets.</p>
+          </div>
+        </div>
+
+        <div class="papers" style="margin-top:16px;grid-template-columns:1fr">
+          <div class="paper-card">
+            <div class="kicker">Construction — de Casteljau</div>
+            <h3>How the point is found, without any formula</h3>
+            <ol class="steps">
+              <li><div><b>Join the points</b><span>Draw the control polygon P₀–P₁–P₂–P₃. It is a rough sketch of the curve you want.</span></div></li>
+              <li><div><b>Divide every segment by t</b><span>On each side, mark the point a fraction <i>t</i> of the way along. Join those marks — a smaller polygon appears.</span></div></li>
+              <li><div><b>Repeat until one point remains</b><span>Divide again, and again. The last point sits exactly on the curve. Do it for every <i>t</i> from 0 to 1 and the pen draws the whole curve.</span></div></li>
+            </ol>
+            <p>Paul de Casteljau found this construction at Citroën in 1959. Kept as a trade secret, it could not be published — so the curve carries Bézier's name. Watch the construction lines on the plotter as you move the <i>t</i> fader: that shrinking ladder of segments <em>is</em> the algorithm.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTROLS -->
+      <section aria-label="Control panel">
+        <p class="section-label"><span>§ 2 — Control desk</span><span>Faders, levers &amp; readouts</span></p>
+
+        <div class="panel">
+          <h2>Parameter t</h2>
+          <p class="fr">Position of the moving point along the curve — from 0 (start) to 1 (finish).</p>
+          <div class="odo" aria-hidden="true">
+            <div class="odo-box" id="odoInt">0</div>
+            <div class="odo-box" style="flex:0 0 18px">.</div>
+            <div class="odo-box" id="odoD1">5</div>
+            <div class="odo-box" id="odoD2">0</div>
+          </div>
+          <div class="odo-label"><span>Counter — t</span><span id="pctLabel">50% of the way along</span></div>
+          <label class="sr" for="tSlider">Parameter t, from 0 to 1</label>
+          <input type="range" id="tSlider" min="0" max="1000" value="500" step="1">
+          <div class="scale"><span>0 · P₀ START</span><span>½</span><span>1 · FINISH Pₙ</span></div>
+          <div class="transport">
+            <button class="hbtn red" id="playBtn" type="button">▶ Play</button>
+            <button class="hbtn" id="stepBtn" type="button">Step +</button>
+            <button class="hbtn" id="resetTBtn" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Switches</h2>
+          <p class="fr">What appears on the plotting table.</p>
+          <div class="switch-row">
+            <div class="switch-text"><b>Polygon</b><span>The control polygon P₀…Pₙ</span></div>
+            <button class="lever" type="button" id="swPoly" aria-pressed="true" aria-label="Show control polygon"><i></i></button>
+          </div>
+          <div class="switch-row">
+            <div class="switch-text"><b>Construction</b><span>The de Casteljau segments</span></div>
+            <button class="lever" type="button" id="swCons" aria-pressed="true" aria-label="Show de Casteljau construction"><i></i></button>
+          </div>
+          <div class="switch-row">
+            <div class="switch-text"><b>Grid</b><span>Millimetre graph paper</span></div>
+            <button class="lever" type="button" id="swGrid" aria-pressed="true" aria-label="Show grid paper"><i></i></button>
+          </div>
+          <div class="switch-row">
+            <div class="switch-text"><b>Hull</b><span>The convex envelope of the points</span></div>
+            <button class="lever" type="button" id="swHull" aria-pressed="false" aria-label="Show convex hull"><i></i></button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Curve degree</h2>
+          <p class="fr">The number of points minus one. The higher the degree, the more the curve can ripple.</p>
+          <div class="degree-grid" role="group" aria-label="Curve degree">
+            <button class="hbtn deg-btn" type="button" data-deg="2">II<br><small>3 pts</small></button>
+            <button class="hbtn deg-btn active" type="button" data-deg="3">III<br><small>4 pts</small></button>
+            <button class="hbtn deg-btn" type="button" data-deg="4">IV<br><small>5 pts</small></button>
+            <button class="hbtn deg-btn" type="button" data-deg="5">V<br><small>6 pts</small></button>
+          </div>
+          <div class="transport" style="grid-template-columns:1fr 1fr">
+            <button class="hbtn" id="addBtn" type="button">+ Point</button>
+            <button class="hbtn" id="removeBtn" type="button">− Point</button>
+          </div>
+
+          <h2 style="margin-top:20px">Point read-out</h2>
+          <p class="fr">Coordinates read off the table, in plotter units (0–10). Click a row to select that point.</p>
+          <table class="coord-table" aria-label="Control point coordinates">
+            <thead><tr><th>Point</th><th>X</th><th>Y</th><th>Role</th></tr></thead>
+            <tbody id="coordBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- FORMULA + BASIS -->
+    <div class="papers">
+      <div class="paper-card">
+        <div class="kicker">The formula — Bernstein</div>
+        <h3>One sum does all the drawing</h3>
+        <div class="formula">
+          <div class="big">B(t) = Σ<sub>i=0…n</sub> &nbsp;C(n,i) · (1−t)<sup>n−i</sup> · t<sup>i</sup> · P<sub>i</sub></div>
+          <div class="sub2">Each control point P<sub>i</sub> pulls on the curve with a weight. The weights always add up to exactly 1 — so the point B(t) is a weighted average, and it can never leave the convex hull of its points. At t = 0 only P₀ counts; at t = 1, only Pₙ. In between, the pull hands over smoothly. The bars below are those weights, live, for the t you have set.</div>
+        </div>
+        <div class="weight-row" id="weightRow" aria-live="polite"></div>
+        <p><strong>Why Renault cared:</strong> a stylist's clay model could not be sent to a milling machine. Bézier's sum could. Change one number, re-run the sum, and the same panel comes off the machine every time — the beginning of designing cars by computer.</p>
+      </div>
+
+      <div class="paper-card">
+        <div class="kicker">Bernstein polynomials</div>
+        <h3>The weights, drawn</h3>
+        <p style="margin-top:6px">Each coloured line is one point's pull as t travels from 0 to 1. The vertical rule is your t. Where a line is high, its point is steering the pen.</p>
+        <div class="basis-wrap"><canvas id="basis" width="640" height="360" aria-label="Chart of Bernstein basis functions for the current degree"></canvas></div>
+        <div class="legend" id="basisLegend"></div>
+        <p>Bézier built his system, UNISURF, on these polynomials — work begun at Renault in the early 1960s and presented through the decade. The same Bernstein sum still sits inside every font outline and vector drawing you use today.</p>
+      </div>
+    </div>
+
+    <!-- DOSSIER -->
+    <section class="dossier" aria-labelledby="dossierTitle">
+      <div class="kicker" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);font-weight:700;font-family:'Libre Franklin',sans-serif">Dossier — Two design offices, one curve</div>
+      <h3 id="dossierTitle">Paris, 1959–1962: the race to draw by numbers</h3>
+      <div class="timeline">
+        <div class="tcell"><div class="yr">1959</div><h4>Citroën — Secret</h4><p>Paul de Casteljau, physicist at Citroën, works out the segment-dividing construction. The company classifies it. He may not publish for years.</p></div>
+        <div class="tcell"><div class="yr red">1962</div><h4>Renault — Published</h4><p>Pierre Bézier, engineer at Renault since 1933, publishes his method independently. Because his paper is the first in print, the curves take his name.</p></div>
+        <div class="tcell"><div class="yr">1960s</div><h4>UNISURF</h4><p>Bézier develops UNISURF at Renault: stylists shape curves and surfaces on a screen, and milling machines cut full-size body masters from the numbers.</p></div>
+        <div class="tcell"><div class="yr">Today</div><h4>Everywhere</h4><p>The same mathematics drives PostScript and SVG paths, font glyphs, CAD kernels and animation curves. Drag a handle in any drawing program — it is a Bézier handle.</p></div>
+      </div>
+      <div class="try-strip">
+        <p><strong>NOW TRY IT YOURSELF —</strong> Set the degree to <strong>II</strong> and note the curve is a parabola that never reaches P₁. Switch on the <strong>Hull</strong>, then drag a point far away: the curve follows, but never escapes the hull. Finally press <strong>PLAY</strong> and watch the construction ladder sweep the pen from P₀ to Pₙ.</p>
+        <button class="hbtn red" type="button" id="tryBtn">▶ Start playback</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>TECHNICAL NOTE No. 62-B — A REPRODUCTION OF P. BÉZIER'S METHOD (1962) FOR DEMONSTRATION. NO DATA LEAVES THIS MACHINE.</span>
+    <span class="stamp2">Renault · UNISURF · MMXXVI</span>
+  </footer>
+</div>
+
 </body>
 </html>
