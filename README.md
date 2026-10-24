@@ -38,6 +38,12 @@ See [`docs/HISTORY.md`](docs/HISTORY.md) for the full story.
 | **Bernstein weights** | The formula B(t) = Σ Bᵢ,ₙ(t)·Pᵢ with a live weight bar per term, plus a chart of the basis functions Bᵢ,ₙ(t) for the current degree. |
 | **Dossier** | A typed briefing on Paris 1959–1962: the race to draw by numbers. |
 
+The desk is a tabbed console: four panels — **§ 1** Workshop / Atelier,
+**§ 2** Construction, **§ 3** Mathematics / Mathématiques, **§ 4** Dossier —
+each filling the screen, so the page itself never scrolls. Arrow keys move
+between tabs; on narrow screens the tab bar switches to short labels and
+wraps into a 2 × 2 grid.
+
 ## Running it
 
 There is no build step and nothing to install — the whole application is one
