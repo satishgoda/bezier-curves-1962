@@ -26,7 +26,7 @@
     }
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
   body{
     font-family:"IBM Plex Mono", ui-monospace, monospace;
     background:var(--cabinet-2);
@@ -40,7 +40,7 @@
   .cabinet{
     max-width:1180px; margin:0 auto; background:var(--cabinet);
     border-left:1px solid var(--line); border-right:1px solid var(--line);
-    min-height:100vh; position:relative;
+    height:100dvh; max-height:100dvh; position:relative; display:flex; flex-direction:column; overflow:hidden;
     box-shadow:0 0 0 1px rgba(0,0,0,.15), 0 20px 50px rgba(0,0,0,.25);
   }
   .screw{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #f2f2f2, #8a8a8a 55%, #555);box-shadow:inset 0 -1px 2px rgba(0,0,0,.6), 0 1px 1px rgba(255,255,255,.6)}
@@ -48,30 +48,31 @@
   .screw.tl{top:10px;left:10px}.screw.tr{top:10px;right:10px}.screw.bl{bottom:10px;left:10px}.screw.br{bottom:10px;right:10px}
 
   /* ---------- NAMEPLATE ---------- */
-  header{padding:28px 22px 0}
+  header{padding:12px 18px 0;flex:none}
   .nameplate{
     border:2px solid var(--ink); background:var(--panel); box-shadow:var(--shadow);
-    padding:14px 16px 12px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    padding:10px 14px 9px; display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap;
   }
   .plate-left{flex:1 1 520px; min-width:260px}
-  .maker{font-family:"Libre Franklin",sans-serif;font-weight:800;letter-spacing:.14em;font-size:11px;text-transform:uppercase;color:var(--ink-soft);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .maker{font-family:"Libre Franklin",sans-serif;font-weight:800;letter-spacing:.14em;font-size:10px;text-transform:uppercase;color:var(--ink-soft);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .maker b{color:var(--ink)} .maker span.dot{opacity:.5}
-  h1{font-family:"Libre Franklin",sans-serif;font-weight:900;line-height:.92;letter-spacing:-.02em;text-transform:uppercase;margin:10px 0 6px;font-size:clamp(34px,6vw,64px)}
+  h1{font-family:"Libre Franklin",sans-serif;font-weight:900;line-height:.9;letter-spacing:-.02em;text-transform:uppercase;margin:4px 0 4px;font-size:clamp(26px,3.6vw,40px);display:inline-block}
+  h1 br{display:none}
   h1 em{font-style:normal;color:var(--red)}
-  .subtitle{font-family:"Courier Prime",monospace;font-size:15px;line-height:1.45;max-width:640px;margin:0;color:var(--ink-soft)}
+  .subtitle{display:inline;font-family:"Courier Prime",monospace;font-size:12.5px;line-height:1.4;max-width:640px;margin:0 0 0 14px;color:var(--ink-soft);vertical-align:middle}
   .subtitle strong{color:var(--ink)}
-  .plate-stamp{flex:0 0 auto;text-align:center;border:2px solid var(--red);color:var(--red);padding:10px 12px 8px;transform:rotate(2deg);font-family:"Libre Franklin",sans-serif}
-  .plate-stamp .big{font-weight:900;font-size:28px;line-height:1;letter-spacing:.06em}
-  .plate-stamp .small{font-size:9px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;margin-top:4px}
-  .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .plate-stamp{flex:0 0 auto;text-align:center;border:2px solid var(--red);color:var(--red);padding:6px 10px 5px;transform:rotate(2deg);font-family:"Libre Franklin",sans-serif}
+  .plate-stamp .big{font-weight:900;font-size:22px;line-height:1;letter-spacing:.06em}
+  .plate-stamp .small{font-size:8px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;margin-top:3px}
+  .meta-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .meta-chip{border:1px solid var(--ink);padding:6px 9px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--cabinet);font-weight:600}
   .meta-chip.red{background:var(--red);color:#fff;border-color:var(--red)}
   .meta-chip.blue{background:var(--blue);color:#fff;border-color:var(--blue)}
   @media (prefers-color-scheme: dark){ .meta-chip.blue{background:#2b4a73} }
 
   /* ---------- STATUS STRIP ---------- */
-  .status-strip{margin:14px 22px 0;background:var(--bezel);color:#e9e4d0;display:flex;flex-wrap:wrap;gap:0;border:2px solid #111;overflow:hidden}
-  .status-cell{padding:9px 13px;border-right:1px solid #444;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+  .status-strip{margin:10px 18px 0;background:var(--bezel);color:#e9e4d0;display:flex;flex-wrap:wrap;gap:0;border:2px solid #111;overflow:hidden;flex:none}
+  .status-cell{padding:7px 12px;border-right:1px solid #444;font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
   .status-cell:last-child{border-right:0}
   .lamp{width:11px;height:11px;border-radius:50%;background:#3a3a3a;border:1px solid #000;box-shadow:inset 0 1px 1px rgba(255,255,255,.3);flex:none}
   .lamp.on-red{background:var(--lamp);box-shadow:0 0 10px rgba(255,59,48,.9), inset 0 1px 1px #fff}
@@ -80,21 +81,47 @@
   .status-cell strong{color:#fff}
   .status-cell .val{font-family:"Courier Prime",monospace;font-size:13px;letter-spacing:0;text-transform:none}
 
+  /* ---------- TAB BAR ---------- */
+  .tab-bar{margin:12px 18px 0;display:flex;gap:6px;flex-wrap:nowrap;flex:none;min-width:0;border-bottom:3px solid var(--ink);padding:0 2px}
+  .tab-btn{appearance:none;flex:1 1 0;min-width:0;overflow:hidden;border:2px solid var(--ink);border-bottom:0;background:var(--cabinet-2);color:var(--ink-soft);font-family:"Libre Franklin",sans-serif;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px;padding:11px 8px 9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;position:relative;top:0}
+  .tab-btn .tab-no{font-size:10px;border:1.5px solid currentColor;padding:2px 5px;line-height:1;flex:none}
+  .tab-btn .tab-sub{display:block;font-family:"Courier Prime",monospace;font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;opacity:.75;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tab-btn .tab-name{display:block;flex:1 1 auto;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .tab-btn .ns{display:none}
+  .tab-btn:hover{background:var(--panel)}
+  .tab-btn[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 3px 0 var(--panel);padding-bottom:12px;margin-bottom:-3px;z-index:1}
+  .tab-btn[aria-selected="true"] .tab-no{background:var(--red);border-color:var(--red);color:#fff}
+  .tab-btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+  @media (max-width:760px){ .tab-btn .tab-sub{display:none} .tab-btn{letter-spacing:.05em} }
+  @media (max-width:640px){ .tab-btn{font-size:9px;letter-spacing:.04em;padding:9px 4px 8px;gap:5px} .tab-btn .tab-no{font-size:8px;padding:2px 3px} .tab-btn .nl{display:none} .tab-btn .ns{display:inline} }
+  @media (max-width:480px){
+    /* Narrow phones: wrap the tab bar into a 2 x 2 grid so no label is squeezed */
+    .tab-bar{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-bottom:0;padding:0}
+    .tab-btn{flex-direction:row;gap:6px;padding:10px 6px 9px;font-size:10px;letter-spacing:.05em;border-bottom:2px solid var(--ink)}
+    .tab-btn .tab-no{font-size:9px;padding:2px 4px}
+    .tab-btn[aria-selected="true"]{padding-bottom:9px;margin-bottom:0;box-shadow:inset 0 -3px 0 var(--red)}
+  }
+
   /* ---------- MAIN MACHINE ---------- */
-  main{padding:16px 22px 8px}
-  .machine{display:grid;grid-template-columns:1.65fr .95fr;gap:16px;align-items:start}
-  @media (max-width:860px){ .machine{grid-template-columns:1fr} header{padding:18px 14px 0} main{padding:14px 14px 6px} .status-strip{margin:12px 14px 0} }
+  main{padding:12px 18px 10px;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  .tab-panel{display:none;flex:1 1 auto;min-height:0;overflow:hidden}
+  .tab-panel.active{display:flex;flex-direction:column}
+  .tab-panel.scrollable{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-right:2px}
+  .machine{display:grid;grid-template-columns:1.45fr .92fr .92fr;gap:14px;align-items:start;height:100%;min-height:0}
+  .machine>section{min-height:0;display:flex;flex-direction:column}
+  @media (max-width:1020px){ .machine{grid-template-columns:1.3fr 1fr} .machine>section.controls-b{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start} .machine>section.controls-b>.section-label{grid-column:1 / -1} }
+  @media (max-width:860px){ .machine{grid-template-columns:1fr;overflow-y:auto} .machine>section.controls-b{display:flex} header{padding:10px 12px 0} main{padding:10px 12px 8px} .status-strip{margin:8px 12px 0} .tab-bar{margin:10px 12px 0} }
 
   .section-label{font-family:"Libre Franklin",sans-serif;font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;display:flex;justify-content:space-between;gap:10px;margin:0 0 8px;color:var(--ink)}
   .section-label span:last-child{font-family:"IBM Plex Mono",monospace;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink-soft);font-size:11px}
 
   /* Plotter */
-  .plotter-bezel{background:var(--bezel);padding:12px;border:2px solid #111;box-shadow:0 4px 0 rgba(0,0,0,.25)}
-  .plotter-head{display:flex;justify-content:space-between;align-items:center;color:#cfc9ae;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-family:"Libre Franklin",sans-serif;font-weight:700;padding:0 2px 10px}
+  .plotter-bezel{background:var(--bezel);padding:10px;border:2px solid #111;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+  .plotter-head{display:flex;justify-content:space-between;align-items:center;color:#cfc9ae;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-family:"Libre Franklin",sans-serif;font-weight:700;padding:0 2px 8px}
   .plotter-head b{color:#fff}
   .screenwrap{background:var(--paper);border:1px solid #000;position:relative;overflow:hidden}
   canvas#plot{display:block;width:100%;height:auto;aspect-ratio: 4 / 3;touch-action:none;cursor:crosshair}
-  .plotter-foot{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px}
+  .plotter-foot{display:flex;gap:7px;flex-wrap:wrap;padding-top:8px;align-items:center}
   .foot-note{color:#a9a38c;font-size:11px;line-height:1.5;font-family:"Courier Prime",monospace;flex:1 1 240px}
   .preset-label{color:#fff;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-family:"Libre Franklin",sans-serif;font-weight:700;align-self:center}
 
@@ -113,14 +140,14 @@
   .hbtn:disabled{opacity:.45;cursor:not-allowed}
 
   /* Control panel */
-  .panel{background:var(--panel);border:2px solid var(--ink);box-shadow:var(--shadow);padding:16px}
-  .panel + .panel{margin-top:16px}
+  .panel{background:var(--panel);border:2px solid var(--ink);box-shadow:var(--shadow);padding:12px 14px}
+  .panel + .panel{margin-top:12px}
   .panel h2{font-family:"Libre Franklin",sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px}
   .panel .fr{font-family:"Courier Prime",monospace;font-size:12px;color:var(--ink-soft);margin:0 0 12px}
 
   /* Odometer readout */
   .odo{display:flex;gap:4px;align-items:stretch;margin:10px 0 6px}
-  .odo-box{background:#111;color:#f5efdb;font-family:"Courier Prime",monospace;font-weight:700;font-size:28px;line-height:1;padding:8px 0;text-align:center;flex:1;border:1px solid #000;box-shadow:inset 0 2px 6px rgba(0,0,0,.8)}
+  .odo-box{background:#111;color:#f5efdb;font-family:"Courier Prime",monospace;font-weight:700;font-size:22px;line-height:1;padding:6px 0;text-align:center;flex:1;border:1px solid #000;box-shadow:inset 0 2px 6px rgba(0,0,0,.8)}
   .odo-box.small{font-size:13px;padding:10px 0}
   .odo-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between}
   input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:6px 0 2px;cursor:pointer}
@@ -132,7 +159,7 @@
   .transport{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
 
   /* Toggle switches — buttons, not checkboxes */
-  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px dashed var(--line)}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px dashed var(--line)}
   .switch-row:first-of-type{border-top:0}
   .switch-text b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-family:"Libre Franklin",sans-serif}
   .switch-text span{font-size:11px;color:var(--ink-soft);font-family:"Courier Prime",monospace}
@@ -153,9 +180,16 @@
   .pt-dot.sq{border-radius:0}.pt-dot.rd{border-radius:50%}
 
   /* ---------- PAPER SECTIONS ---------- */
-  .papers{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:16px}
-  @media (max-width:860px){ .papers{grid-template-columns:1fr} }
-  .paper-card{background:var(--paper);border:1px solid var(--line);box-shadow:3px 3px 0 rgba(0,0,0,.18);padding:20px 20px 18px;position:relative}
+  .papers{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;flex:1 1 auto;min-height:0}
+  .construction-layout{flex:1 1 auto}
+  @media (max-width:860px){ .papers{grid-template-columns:1fr;height:auto} }
+  .paper-card{background:var(--paper);border:1px solid var(--line);box-shadow:3px 3px 0 rgba(0,0,0,.18);padding:16px 18px 14px;position:relative;overflow-y:auto;scrollbar-width:thin;min-height:0}
+  .paper-card.fill{height:100%}
+  .construction-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}
+  @media (max-width:860px){ .construction-layout{grid-template-columns:1fr;height:auto} }
+  .construction-layout .paper-card p{font-size:13.5px}
+  .big-note{font-family:"Courier Prime",monospace;font-size:13.5px;line-height:1.65}
+  .big-note strong{color:var(--red)}
   @media (prefers-color-scheme: dark){ .paper-card{box-shadow:3px 3px 0 rgba(0,0,0,.6)} }
   .paper-card::before{content:"";position:absolute;top:0;bottom:0;left:34px;width:1px;background:rgba(185,31,36,.28)}
   .paper-card h3{font-family:"Courier Prime",monospace;font-weight:700;font-size:19px;margin:0 0 2px 14px;line-height:1.2}
@@ -180,7 +214,7 @@
   .steps b{font-family:"Libre Franklin",sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:2px}
 
   /* Dossier / timeline */
-  .dossier{margin-top:16px;background:var(--panel);border:2px solid var(--ink);padding:20px;box-shadow:var(--shadow)}
+  .dossier{background:var(--panel);border:2px solid var(--ink);padding:18px;box-shadow:var(--shadow);flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin}
   .dossier h3{font-family:"Libre Franklin",sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:-.01em;font-size:26px;margin:0;line-height:1}
   .timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:16px;border:1.5px solid var(--ink)}
   @media (max-width:860px){ .timeline{grid-template-columns:1fr 1fr} }
@@ -196,7 +230,7 @@
   .try-strip p{margin:0;font-family:"Courier Prime",monospace;font-size:13px;line-height:1.6;flex:1 1 320px}
   .try-strip p strong{color:#fff}
 
-  footer{padding:18px 22px 30px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-soft);letter-spacing:.04em}
+  footer{padding:8px 18px 10px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--ink-soft);letter-spacing:.04em;flex:none;border-top:1px dashed var(--line);margin:0 18px}
   footer .stamp2{border:1.5px solid var(--ink-soft);padding:6px 9px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
@@ -229,13 +263,21 @@
   <div class="status-strip" role="status" aria-label="Machine status">
     <div class="status-cell"><span class="lamp on-red" id="lampPower"></span> Sous tension</div>
     <div class="status-cell"><span class="lamp on-green" id="lampPlay"></span> <span id="playStatus">Arrêt — prêt</span></div>
-    <div class="status-cell">Degré <strong id="degStatus">3 — Cubique</strong></div>
+    <div class="status-cell">Degré <strong id="degStatus">3 — Cubic</strong></div>
     <div class="status-cell">Paramètre <span class="val" id="tStatus">t = 0.50</span></div>
     <div class="status-cell">Points <strong id="ptStatus">P₀ – P₃</strong></div>
   </div>
 
+  <nav class="tab-bar" role="tablist" aria-label="Sections">
+    <button class="tab-btn" type="button" role="tab" id="tab-workshop" aria-selected="true" aria-controls="panel-workshop" data-tab="panel-workshop"><span class="tab-no">§ 1</span><span class="tab-name"><span class="nl">Atelier</span><span class="ns">Atelier</span><span class="tab-sub">Table traçante &amp; pupitre</span></span></button>
+    <button class="tab-btn" type="button" role="tab" id="tab-construction" aria-selected="false" aria-controls="panel-construction" data-tab="panel-construction" tabindex="-1"><span class="tab-no">§ 2</span><span class="tab-name"><span class="nl">Construction</span><span class="ns">Tracé</span><span class="tab-sub">Méthode de de Casteljau</span></span></button>
+    <button class="tab-btn" type="button" role="tab" id="tab-maths" aria-selected="false" aria-controls="panel-maths" data-tab="panel-maths" tabindex="-1"><span class="tab-no">§ 3</span><span class="tab-name"><span class="nl">Mathématiques</span><span class="ns">Maths</span><span class="tab-sub">Formule &amp; poids</span></span></button>
+    <button class="tab-btn" type="button" role="tab" id="tab-dossier" aria-selected="false" aria-controls="panel-dossier" data-tab="panel-dossier" tabindex="-1"><span class="tab-no">§ 4</span><span class="tab-name"><span class="nl">Dossier</span><span class="ns">Dossier</span><span class="tab-sub">Paris, 1959–1962</span></span></button>
+  </nav>
+
   <main>
-    <!-- MACHINE -->
+    <!-- TAB 1 · WORKSHOP -->
+    <div class="tab-panel active" id="panel-workshop" role="tabpanel" aria-labelledby="tab-workshop">
     <div class="machine">
       <section aria-labelledby="plotLabel">
         <p class="section-label" id="plotLabel"><span>§ 1 — Table traçante</span><span>Drag the points · the pen follows</span></p>
@@ -254,18 +296,6 @@
           </div>
         </div>
 
-        <div class="papers" style="margin-top:16px;grid-template-columns:1fr">
-          <div class="paper-card">
-            <div class="kicker">Construction — de Casteljau</div>
-            <h3>How the point is found, without any formula</h3>
-            <ol class="steps">
-              <li><div><b>Join the points</b><span>Draw the control polygon P₀–P₁–P₂–P₃. It is a rough sketch of the curve you want.</span></div></li>
-              <li><div><b>Divide every segment by t</b><span>On each side, mark the point a fraction <i>t</i> of the way along. Join those marks — a smaller polygon appears.</span></div></li>
-              <li><div><b>Repeat until one point remains</b><span>Divide again, and again. The last point sits exactly on the curve. Do it for every <i>t</i> from 0 to 1 and the pen draws the whole curve.</span></div></li>
-            </ol>
-            <p>Paul de Casteljau found this construction at Citroën in 1959. Kept as a trade secret, it could not be published — so the curve carries Bézier's name. Watch the construction lines on the plotter as you move the <i>t</i> fader: that shrinking ladder of segments <em>is</em> the algorithm.</p>
-          </div>
-        </div>
       </section>
 
       <!-- CONTROLS -->
@@ -312,7 +342,10 @@
             <button class="lever" type="button" id="swHull" aria-pressed="false" aria-label="Show convex hull"><i></i></button>
           </div>
         </div>
+      </section>
 
+      <section aria-label="Degree and point read-out" class="controls-b">
+        <p class="section-label"><span>Degré &amp; relevé</span><span>Points sur la table</span></p>
         <div class="panel">
           <h2>Degré de la courbe</h2>
           <p class="fr">Nombre de points moins un. Plus le degré est élevé, plus la courbe peut onduler.</p>
@@ -336,8 +369,36 @@
         </div>
       </section>
     </div>
+    </div>
 
-    <!-- FORMULA + BASIS -->
+    <!-- TAB 2 · CONSTRUCTION -->
+    <div class="tab-panel" id="panel-construction" role="tabpanel" aria-labelledby="tab-construction">
+      <p class="section-label"><span>§ 2 — Construction</span><span>À lire avec la table traçante de l'atelier — déplacez t là-bas et regardez l'échelle se réduire</span></p>
+      <div class="construction-layout">
+        <div class="paper-card fill">
+          <div class="kicker">Construction — de Casteljau</div>
+          <h3>How the point is found, without any formula</h3>
+          <ol class="steps">
+            <li><div><b>Join the points</b><span>Draw the control polygon P₀–P₁–P₂–P₃. It is a rough sketch of the curve you want.</span></div></li>
+            <li><div><b>Divide every segment by t</b><span>On each side, mark the point a fraction <i>t</i> of the way along. Join those marks — a smaller polygon appears.</span></div></li>
+            <li><div><b>Repeat until one point remains</b><span>Divide again, and again. The last point sits exactly on the curve. Do it for every <i>t</i> from 0 to 1 and the pen draws the whole curve.</span></div></li>
+          </ol>
+          <p>Paul de Casteljau found this construction at Citroën in 1959. Kept as a trade secret, it could not be published — so the curve carries Bézier's name.</p>
+        </div>
+        <div class="paper-card fill">
+          <div class="kicker">Lecture de l'échelle</div>
+          <h3>What you see on the plotter</h3>
+          <p>On the <strong>Atelier</strong> tab, switch <strong>Construction</strong> on and drag the <i>t</i> fader. The coloured segments are this construction, live:</p>
+          <p><strong>Level 1</strong> — one point on each side of the polygon, each a fraction <i>t</i> along its side.<br><strong>Level 2</strong> — the same division applied to the smaller polygon those points make.<br><strong>Final point — B(t)</strong> — after enough rounds only one point remains, and it lies exactly on the curve.</p>
+          <p class="big-note">No formula is evaluated to find it — only repeated straight-line division. That is why the method was so practical in 1959: a draughtsman, or a simple machine, could carry it out with a ruler. Bézier's Bernstein sum (see <strong>Mathématiques</strong>) gives the same point by arithmetic; de Casteljau gives it by geometry. They are two descriptions of one curve.</p>
+          <p><button class="hbtn blue" type="button" data-goto="panel-workshop">← Retour à la table traçante</button></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3 · MATHEMATICS -->
+    <div class="tab-panel" id="panel-maths" role="tabpanel" aria-labelledby="tab-maths">
+    <p class="section-label"><span>§ 3 — Mathématiques</span><span>En direct, pour le t et le degré réglés à l'atelier</span></p>
     <div class="papers">
       <div class="paper-card">
         <div class="kicker">La formule — Bernstein</div>
@@ -360,7 +421,11 @@
       </div>
     </div>
 
-    <!-- DOSSIER -->
+    </div>
+
+    <!-- TAB 4 · DOSSIER -->
+    <div class="tab-panel" id="panel-dossier" role="tabpanel" aria-labelledby="tab-dossier">
+    <p class="section-label"><span>§ 4 — Dossier</span><span>Deux bureaux d'études, une même courbe</span></p>
     <section class="dossier" aria-labelledby="dossierTitle">
       <div class="kicker" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);font-weight:700;font-family:'Libre Franklin',sans-serif">Dossier — Deux bureaux d'études, une même courbe</div>
       <h3 id="dossierTitle">Paris, 1959–1962: the race to draw by numbers</h3>
@@ -375,6 +440,7 @@
         <button class="hbtn red" type="button" id="tryBtn">▶ Lancer la lecture</button>
       </div>
     </section>
+    </div>
   </main>
 
   <footer>
@@ -687,7 +753,36 @@
     requestAnimationFrame(tick);
   }
   playBtn.addEventListener('click', startPlay);
-  document.getElementById('tryBtn').addEventListener('click', function(){ t=0; slider.value=0; if(!playing) startPlay(); window.scrollTo({top:0,behavior:'smooth'}); });
+
+  // --- Tabs ---
+  var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
+  function activateTab(panelId, focusBtn){
+    tabBtns.forEach(function(b){
+      var on = b.getAttribute('data-tab')===panelId;
+      b.setAttribute('aria-selected', on?'true':'false');
+      b.tabIndex = on?0:-1;
+      if(on && focusBtn) b.focus();
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.id===panelId); });
+    // Redraw once the panel is visible so canvases paint at full size
+    requestAnimationFrame(function(){ renderAll(); });
+  }
+  tabBtns.forEach(function(b, idx){
+    b.addEventListener('click', function(){ activateTab(b.getAttribute('data-tab'), false); });
+    b.addEventListener('keydown', function(e){
+      var n=null;
+      if(e.key==='ArrowRight') n=(idx+1)%tabBtns.length;
+      else if(e.key==='ArrowLeft') n=(idx-1+tabBtns.length)%tabBtns.length;
+      else if(e.key==='Home') n=0;
+      else if(e.key==='End') n=tabBtns.length-1;
+      if(n!==null){ e.preventDefault(); activateTab(tabBtns[n].getAttribute('data-tab'), true); }
+    });
+  });
+  document.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ activateTab(b.getAttribute('data-goto'), false); });
+  });
+
+  document.getElementById('tryBtn').addEventListener('click', function(){ activateTab('panel-workshop', false); t=0; slider.value=0; if(!playing) startPlay(); });
   document.getElementById('stepBtn').addEventListener('click', function(){ stopPlay(); t=Math.min(1, t+0.05); slider.value=Math.round(t*1000); renderAll(); });
   document.getElementById('resetTBtn').addEventListener('click', function(){ stopPlay(); t=0; slider.value=0; renderAll(); });
 
