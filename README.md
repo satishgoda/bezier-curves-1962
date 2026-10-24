@@ -92,3 +92,9 @@ interpolation between neighbouring control points — the ladder of lines drawn
 on the plotter. Both methods are implemented side by side in the app's engine,
 which is a fitting tribute: the two men found the same curve from opposite
 directions.
+
+## Attribution
+
+This project — the interactive demo, its French and English editions, and its
+documentation — was built with [Muse](https://muse.ai), Meta's personal AI
+agent.
